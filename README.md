@@ -1,9 +1,27 @@
-My Streamlit app was on visualizing crime in the city Chicago. 
-The data is taken from an open data source in Chicago's city portal. https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-Present/ijzp-q8t2/data_preview
-The csv needed is a table with the listed areas and comunnity number
-The data is pulled via API using Socrata
+Chicago Neighborhood Crime Dashboard
+This Streamlit app provides an interactive and visually engaging dashboard for exploring crime data in Chicago neighborhoods. The dashboard allows users to analyze crime trends, visualize crime distribution by time of day, and view crime locations on a map. It leverages the City of Chicago's open crime dataset and offers insights into various crime types and their occurrences across different communities.
 
-This app can have many different use cases;
-People interested in looking to relocate to Chicago and do an analysis of different neighborhoods
-Business owners looking to open a physical building 
-Tourist looking for timing their visits to the city
+Features
+📊 Data Visualization
+Time of Day Analysis: Bar chart showing the distribution of crimes across different times of the day.
+Location Analysis: Pie chart highlighting the most common locations where crimes occur.
+Interactive Map: View precise locations of crimes plotted on a geographic map.
+🔍 Customizable Filters
+Date Range Selection: Choose a start and end date to focus on a specific period.
+Crime Type: Select from various crime categories (e.g., Theft, Assault, Burglary).
+Community Area: Filter crimes by specific neighborhoods in Chicago.
+📈 Crime Data Table
+View detailed crime data, including case number, type of crime, description, location, and date.
+🚀 API Integration
+The app fetches live data from the City of Chicago Crime Dataset API, ensuring up-to-date information for analysis.
+
+How to Use
+Open the App: Access the app at Chicago Crime Dashboard.
+Set Filters:
+Use the sidebar to choose the date range, crime type, and neighborhood.
+Update Data:
+Click the Update Data button to apply the filters and fetch the latest data.
+Explore Visualizations:
+View the bar chart, pie chart, and map for insights into crime trends.
+Analyze Data Table:
+Scroll through the table to review detailed crime data.
