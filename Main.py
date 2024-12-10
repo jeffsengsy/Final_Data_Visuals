@@ -158,6 +158,8 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+st.title("Chicago Neighborhood Crime") 
+
 alt.themes.enable("dark")
 
 # Provide initial start and end times for the date inputs.
