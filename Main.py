@@ -175,7 +175,7 @@ primary_crime_names = crime_names()
 # Add a sidebar
 
 with st.sidebar:
-    st.image("chicago_flag.png", use_column_width=True)  # Add the Chicago flag
+    st.image("chicago_flag.png", use_container_width=True)  # Add the Chicago flag
     st.title('Chicago Neighborhood Crime Dashboard')
     begin_date = st.date_input('Begin Date', start_init_1)
     ending_date = st.date_input('End Date', end_init_1)
