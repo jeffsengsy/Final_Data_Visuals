@@ -6,15 +6,15 @@ from datetime import datetime
 import plotly.express as px
 from sodapy import Socrata
 
+
 # Import the community data files.
 df_communities = pd.read_csv("communities.csv")
-
 
 # API access
 # Website: https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-Present/ijzp-q8t2/data_preview
 
 def call_data(start_date, end_date, crime_type, community):
-    """Makes a call to the chicago crime API."""
+    """Makes a call to the chicago crime API. """
 
     client = Socrata("data.cityofchicago.org", None)
     results = client.get("ijzp-q8t2",
@@ -23,8 +23,9 @@ def call_data(start_date, end_date, crime_type, community):
                          where=f"date > '{start_date}' AND date < '{end_date}' AND primary_type = '{crime_type}' AND community_area = '{community}'",
                          limit=250000,
                          order="date DESC")
-    
+
     return results
+
 
 def crime_names():
     """Returns a list of the available crimes to choose from."""
@@ -37,6 +38,7 @@ def crime_names():
     df_crime_type = pd.DataFrame(keep_crimes)
 
     return df_crime_type
+
 
 def convert_community(chosen_community, df_communities):
     """Converts the chosen community to a number that can be called in the API."""
@@ -131,46 +133,23 @@ def location_description(df):
     return fig
 
 def crime_map(df):
-    """Plots a map of the different crime locations with hover descriptions and color-coded crimes."""
-    
-    # Ensure latitude and longitude are floats and drop NaN values
-    df = df.dropna(subset=['latitude', 'longitude'])
-    df['latitude'] = df['latitude'].astype(float)
-    df['longitude'] = df['longitude'].astype(float)
-    
-    # Extract relevant columns
-    df = df[['latitude', 'longitude', 'block', 'description', 'date', 'primary_type']]
-    
-    # Create the map using Plotly
-    fig = px.scatter_mapbox(
-        df,
-        lat='latitude',
-        lon='longitude',
-        color='primary_type',  # Color by crime type
-        hover_name='block',  # Title for hover
-        hover_data={
-            'description': True,  # Include crime description
-            'date': True,  # Include crime date
-            'primary_type': True  # Include crime type
-        },
-        color_discrete_sequence=px.colors.qualitative.Set1,  # Set color palette
-        zoom=10,
-        height=600
-    )
-    
-    # Use OpenStreetMap style
-    fig.update_layout(mapbox_style="open-street-map")
-    
-    # Adjust layout for better display
-    fig.update_layout(
-        margin={"r": 0, "t": 0, "l": 0, "b": 0},
-        hovermode='closest',
-        legend=dict(title="Crime Type")  # Add legend title
-    )
-    
-    return fig
+    """Plots a map of the different crime locations"""
 
+    latitude = df['latitude']
+    longitude = df['longitude']
+    coordinates_data = {'latitude': latitude, 'longitude': longitude}
+    df_coordinates = pd.DataFrame(coordinates_data)
 
+    df_coordinates['latitude'] = df_coordinates['latitude'].astype(float)
+    df_coordinates['longitude'] = df_coordinates['longitude'].astype(float)
+
+    # drop any NaN values
+    df_coordinates = df_coordinates.dropna()
+
+    color = '#4dffff'
+    size = 25
+
+    return df_coordinates, color, size
 
 
 st.set_page_config(
@@ -178,10 +157,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
-st.title("Chicago Crime Analysis")  # Add the title here
-
-alt.themes.enable("dark")
 
 alt.themes.enable("dark")
 
@@ -207,14 +182,6 @@ with st.sidebar:
     crime_type = st.selectbox('Crime Type', options=primary_crime_names['Primary Type'])
     st.text("")
     data_button = st.button("Update Data")
-
-    # Spacer for alignment
-    st.text("")
-    st.text("")
-    st.text("")
-
-      # Add Chicago flag at the bottom
-    st.image("chicago_flag.png", use_container_width=True)
 
 community_chosen_1 = convert_community(community_chosen, df_communities)
 
@@ -274,11 +241,10 @@ with col2:
 st.text("")
 
     # Location Map
-# Location Map
-st.subheader("Crime Location Map")
-map_fig = crime_map(st.session_state['new_df_key_1'])
-st.plotly_chart(map_fig, use_container_width=True)
-
+create_map = st.empty()
+create_map.subheader("Crime Location Map")
+df_coordinates, color, size = crime_map(st.session_state['new_df_key_1'])
+create_map.map(df_coordinates, color=color, size=size)
 
 
 
@@ -300,4 +266,4 @@ if data_button:
 
     # Map implementation
     df_coordinates, color, size = crime_map(st.session_state['new_df_key_1'])
-   
+    create_map.map(df_coordinates, color=color, size=size)
