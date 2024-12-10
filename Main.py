@@ -16,16 +16,21 @@ df_communities['Community'] = df_communities['Community'].astype(str)
 # API access
 # Website: https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-Present/ijzp-q8t2/data_preview
 
-def call_data(start_date, end_date, crime_type, community):
-    """Makes a call to the chicago crime API. """
-
+def call_data(start_date, end_date, crime_types, community):
+    """Makes a call to the chicago crime API for multiple crime types."""
     client = Socrata("data.cityofchicago.org", None)
+    
+    # Create a SQL WHERE clause for multiple crimes
+    crime_conditions = " OR ".join([f"primary_type = '{crime}'" for crime in crime_types])
+    where_clause = f"date > '{start_date}' AND date < '{end_date}' AND ({crime_conditions}) AND community_area = '{community}'"
+    
     results = client.get("ijzp-q8t2",
                          select="id, case_number, block, primary_type, description, location_description, date, community_area, fbi_code,"
                                 "year, latitude, longitude",
-                         where=f"date > '{start_date}' AND date < '{end_date}' AND primary_type = '{crime_type}' AND community_area = '{community}'",
+                         where=where_clause,
                          limit=250000,
                          order="date DESC")
+
 
     return results
 
@@ -61,7 +66,7 @@ def convert_community(chosen_community, df_communities):
 
 
 @st.cache_data
-def clean_crimes(crime_df, neighborhoods, crime, start_date="2018-01-01", end_date="2024-01-01"):
+def clean_crimes(crime_df, neighborhoods, crime_types, start_date="2018-01-01", end_date="2024-01-01"):
     """Combines the crime, demographic and neighborhoods dataframe into one."""
 
     # Convert 'Date' column to datetime
@@ -94,8 +99,8 @@ def clean_crimes(crime_df, neighborhoods, crime, start_date="2018-01-01", end_da
     # Add a default value (e.g., "Unknown") in case no condition is met
     crime_df['Time of Day'] = np.select(conditions, values, default="Unknown")
 
-    # Filter for only the crime of interest
-    crime_df = crime_df.loc[crime_df['primary_type'] == crime]
+    # Filter for only the crimes of interest
+    crime_df = crime_df.loc[crime_df['primary_type'].isin(crime_types)]
 
     # Rename the column Community in the Communities dataframe
     neighborhoods = neighborhoods.rename(columns={"Community Area": "community_area"})
@@ -144,23 +149,52 @@ def location_description(df):
     return fig
 
 def crime_map(df):
-    """Plots a map of the different crime locations"""
+    """Plots a color-coded map of different crime locations and adds a legend."""
+    # Generate a unique color for each crime type
+    unique_crimes = df['primary_type'].unique()
+    colors = px.colors.qualitative.Safe  # Use a predefined qualitative color scale
+    crime_colors = {crime: colors[i % len(colors)] for i, crime in enumerate(unique_crimes)}
 
-    latitude = df['latitude']
-    longitude = df['longitude']
-    coordinates_data = {'latitude': latitude, 'longitude': longitude}
-    df_coordinates = pd.DataFrame(coordinates_data)
+    # Create a column for color based on crime type
+    df['color'] = df['primary_type'].map(crime_colors)
 
-    df_coordinates['latitude'] = df_coordinates['latitude'].astype(float)
-    df_coordinates['longitude'] = df_coordinates['longitude'].astype(float)
+    # Prepare data for map
+    latitude = df['latitude'].astype(float)
+    longitude = df['longitude'].astype(float)
+    crime_type = df['primary_type']
 
-    # drop any NaN values
-    df_coordinates = df_coordinates.dropna()
+    df_coordinates = pd.DataFrame({
+        'latitude': latitude,
+        'longitude': longitude,
+        'crime_type': crime_type,
+        'color': df['color']
+    }).dropna()
 
-    color = '#4dffff'
-    size = 25
+    return df_coordinates, crime_colors
 
-    return df_coordinates, color, size
+def plot_top_5_crimes(df):
+    """Plots a horizontal bar chart of the top crimes in the community."""
+    # Count the number of occurrences of each crime
+    top_crimes = df['primary_type'].value_counts().head(5)
+    
+    # Create a DataFrame for plotting
+    top_crimes_df = pd.DataFrame({
+        'Crime Type': top_crimes.index,
+        'Count': top_crimes.values
+    })
+    
+    # Create a bar chart using Altair
+    chart = alt.Chart(top_crimes_df).mark_bar(color='teal').encode(
+        x=alt.X('Count', title='Number of Crimes'),
+        y=alt.Y('Crime Type', sort='-x', title='Crime Type')
+    ).properties(
+        width=400,
+        height=300,
+        title="Top 5 Crimes"
+    )
+    
+    return chart
+
 
 
 st.set_page_config(
@@ -187,6 +221,7 @@ primary_crime_names = crime_names()
 # Streamlit application UI code below.
 # Add a sidebar
 
+# Sidebar updates for multiple crime types
 with st.sidebar:
     st.image("chicago_flag.png", use_container_width=True)  # Add the Chicago flag
     st.title('Chicago Neighborhood Crime Dashboard')
@@ -194,10 +229,12 @@ with st.sidebar:
     ending_date = st.date_input('End Date', end_init_1)
     st.text("")
     community_chosen = st.selectbox('Community', options=df_communities['Community'].astype(str).unique())
-    crime_type = st.selectbox('Crime Type', options=primary_crime_names['Primary Type'])
+    crime_type = st.multiselect('Crime Types (Select up to 5)', 
+                                options=primary_crime_names['Primary Type'], 
+                                default=['THEFT'],  # Default selection
+                                max_selections=5)
     st.text("")
     data_button = st.button("Update Data")
-
 
 community_chosen_1 = convert_community(community_chosen, df_communities)
 
@@ -220,19 +257,23 @@ ending_date_1 = ending_date.strftime('%Y-%m-%d')
 st.subheader(f'Total: {crime_type}')
 crimecount_placeholder = st.empty()
 
-# Content on the main colunn.
-st.subheader('Table of Data')
-# Placeholder for dataframe table
-data_placeholder = st.empty()
+# Placeholder for horizontal bar chart of top 5 crimes
+st.subheader('Top 5 Crimes')
+top_crimes_placeholder = st.empty()
+
 # Clean the data and create the Time of Day column
 new_df, crime_tot = clean_crimes(df_crime_1, df_communities, crime_type, begin_date_1, ending_date_1)
+
 if 'new_df_key_1' not in st.session_state:
-    # Add the new dataframe to the current session state.
+    # Add the new dataframe to the current session state
     st.session_state['new_df_key_1'] = new_df
-    data_placeholder = st.empty()
-    data_placeholder.dataframe(new_df)
-    # Count of Total Crimes and update the value
-    crimecount_placeholder.subheader(crime_tot)
+    
+    # Update the Top 5 Crimes chart
+    fig = plot_top_5_crimes(st.session_state['new_df_key_1'])
+    top_crimes_placeholder.altair_chart(fig)
+
+# Count of Total Crimes and update the value
+crimecount_placeholder.subheader(crime_tot)
 
 st.text("")
 st.text("")
@@ -256,30 +297,54 @@ with col2:
 
 st.text("")
 
-    # Location Map
-create_map = st.empty()
-create_map.subheader("Crime Location Map")
-df_coordinates, color, size = crime_map(st.session_state['new_df_key_1'])
-create_map.map(df_coordinates, color=color, size=size)
+# Location Map and Crime Legend
+st.subheader("Crime Location Map")
+
+df_coordinates, crime_colors = crime_map(st.session_state['new_df_key_1'])
+
+# Create a scatter map using Plotly Express
+map_fig = px.scatter_mapbox(
+    df_coordinates,
+    lat='latitude',
+    lon='longitude',
+    color='crime_type',
+    color_discrete_map=crime_colors,
+    hover_data=['crime_type'],
+    title="Crime Locations",
+    height=500,
+    zoom=10
+)
+
+# Configure the map style
+map_fig.update_layout(
+    mapbox_style="carto-positron",
+    showlegend=True,
+    legend_title="Crime Type",
+    margin={"r": 0, "t": 30, "l": 0, "b": 0}
+)
+
+# Display the map
+st.plotly_chart(map_fig, use_container_width=True)
 
 
 
 # Load the data and update the placeholders when "Update Data" is clicked.
 if data_button:
-    crimecount_placeholder.subheader(crime_tot)
-
+    # Refresh data
     new_df, crime_tot = clean_crimes(df_crime_1, df_communities, crime_type, begin_date_1, ending_date_1)
     st.session_state['new_df_key_1'] = new_df
-    data_placeholder.dataframe(new_df)
 
-    # Boxplot implementation
-    fig = plot_community_time_day(st.session_state['new_df_key_1'])
-    boxplot_placeholder.plotly_chart(fig)
+    # Update the Top 5 Crimes chart
+    fig = plot_top_5_crimes(st.session_state['new_df_key_1'])
+    top_crimes_placeholder.altair_chart(fig)
 
-    # Piechart implementation
-    fig2 = location_description(st.session_state['new_df_key_1'])
-    piechart_placeholder.plotly_chart(fig2)
+    # Update the other visualizations
+    fig_box = plot_community_time_day(st.session_state['new_df_key_1'])
+    boxplot_placeholder.plotly_chart(fig_box)
 
-    # Map implementation
+    fig_pie = location_description(st.session_state['new_df_key_1'])
+    piechart_placeholder.plotly_chart(fig_pie)
+
+    # Update the map
     df_coordinates, color, size = crime_map(st.session_state['new_df_key_1'])
     create_map.map(df_coordinates, color=color, size=size)
