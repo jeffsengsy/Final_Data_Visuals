@@ -284,15 +284,15 @@ with col1:
     # Box Plot
     st.subheader('Time of Day')
     boxplot_placeholder = st.empty()
-    fig = plot_community_time_day(st.session_state['new_df_key_1'])
-    boxplot_placeholder.plotly_chart(fig)
+    fig_box = plot_community_time_day(st.session_state['new_df_key_1'])
+    boxplot_placeholder.plotly_chart(fig_box)
 
     #Pie chart
 with col2:
     st.subheader('Location Description')
     piechart_placeholder = st.empty()
-    fig2 = location_description(st.session_state['new_df_key_1'])
-    piechart_placeholder.plotly_chart(fig2)
+    fig_pie = location_description(st.session_state['new_df_key_1'])
+    piechart_placeholder.plotly_chart(fig_pie)
 
 
 st.text("")
