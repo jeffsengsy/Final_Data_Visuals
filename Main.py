@@ -214,7 +214,7 @@ with st.sidebar:
     st.text("")
 
       # Add Chicago flag at the bottom
-    st.image("chicago_flag.png", use_column_width=True)
+    st.image("chicago_flag.png", use_container_width=True)
 
 community_chosen_1 = convert_community(community_chosen, df_communities)
 
