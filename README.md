@@ -1,7 +1,7 @@
-Chicago Neighborhood Crime Dashboard
+#Chicago Neighborhood Crime Dashboard
 This Streamlit app provides an interactive and visually engaging dashboard for exploring crime data in Chicago neighborhoods. The dashboard allows users to analyze crime trends, visualize crime distribution by time of day, and view crime locations on a map. It leverages the City of Chicago's open crime dataset and offers insights into various crime types and their occurrences across different communities.
 
-Features
+#Features
 📊 Data Visualization
 Time of Day Analysis: Bar chart showing the distribution of crimes across different times of the day.
 Location Analysis: Pie chart highlighting the most common locations where crimes occur.
@@ -15,7 +15,7 @@ View detailed crime data, including case number, type of crime, description, loc
 🚀 API Integration
 The app fetches live data from the City of Chicago Crime Dataset API, ensuring up-to-date information for analysis.
 
-How to Use
+#How to Use
 Open the App: Access the app at Chicago Crime Dashboard.
 Set Filters:
 Use the sidebar to choose the date range, crime type, and neighborhood.
@@ -28,6 +28,6 @@ Scroll through the table to review detailed crime data.
 
 Datasource
 # API access
-# Website: https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-Present/ijzp-q8t2/data_preview
+Website: https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-Present/ijzp-q8t2/data_preview
 # Communities
-# https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Community-Areas-current-/cauq-8yn6
+ https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Community-Areas-current-/cauq-8yn6
