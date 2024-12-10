@@ -26,8 +26,7 @@ with st.sidebar:
 # Page content
 if page == "Dashboard":
     # Existing dashboard code
-    st.title("Chicago Crime Analysis")  # Add the title here
-    # (Insert the rest of your dashboard code here)
+    st.title("Chicago Crime Analysis")  
 elif page == "Crime Definitions":
     st.title("Crime Definitions")
     st.write("Below are definitions for the crimes included in this dashboard:")
