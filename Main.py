@@ -10,6 +10,9 @@ from sodapy import Socrata
 # Import the community data files.
 df_communities = pd.read_csv("communities.csv")
 
+# Ensure all community names are strings (in case of mixed data types)
+df_communities['Community'] = df_communities['Community'].astype(str)
+
 # API access
 # Website: https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-Present/ijzp-q8t2/data_preview
 
@@ -42,18 +45,26 @@ def crime_names():
 
 def convert_community(chosen_community, df_communities):
     """Converts the chosen community to a number that can be called in the API."""
+    
+    # Ensure both columns are of the same type (string)
+    df_communities['Community Area'] = df_communities['Community Area'].astype(str)
 
+    # Find the corresponding community area number
     community_row = df_communities[df_communities['Community'] == chosen_community]
-    community_area_number = community_row.iloc[0]['Community Area']
+    
+    if community_row.empty:
+        return None  # or handle appropriately if no match is found
 
+    community_area_number = community_row.iloc[0]['Community Area']
+    
     return community_area_number
 
 
 @st.cache_data
-def clean_crimes(crime_df, neighborhoods, crime, start_date= "2018-01-01", end_date="2024-01-01"):
-    """Combines the crime, demographic and neightborhoods dataframe into one."""
+def clean_crimes(crime_df, neighborhoods, crime, start_date="2018-01-01", end_date="2024-01-01"):
+    """Combines the crime, demographic and neighborhoods dataframe into one."""
 
-    # Convert 'Date' column to date time
+    # Convert 'Date' column to datetime
     crime_df['date'] = pd.to_datetime(crime_df['date'], format='mixed')
 
     # Apply filter to dataframe
@@ -78,24 +89,24 @@ def clean_crimes(crime_df, neighborhoods, crime, start_date= "2018-01-01", end_d
         (crime_df['hour'] >= 20)
     ]
 
-    values = ['12am to 4am', '4am to 8am', '8am to 12pm', '12pm to 4pm', '4pm to 8pm',
-              '8pm to 12am']
+    values = ['12am to 4am', '4am to 8am', '8am to 12pm', '12pm to 4pm', '4pm to 8pm', '8pm to 12am']
 
-    crime_df['Time of Day'] = np.select(conditions, values)
+    # Add a default value (e.g., "Unknown") in case no condition is met
+    crime_df['Time of Day'] = np.select(conditions, values, default="Unknown")
 
-    # Filter for only the crime of interest.
+    # Filter for only the crime of interest
     crime_df = crime_df.loc[crime_df['primary_type'] == crime]
 
-    # Rename the column Community in the Commnities dataframe
+    # Rename the column Community in the Communities dataframe
     neighborhoods = neighborhoods.rename(columns={"Community Area": "community_area"})
 
-    # Make the community_area a string in neightborhoods.
+    # Make the community_area a string in neighborhoods
     neighborhoods['community_area'] = neighborhoods['community_area'].astype(str)
 
-    # Add the communities to the dataframe.
+    # Add the communities to the dataframe
     crime_df_1 = pd.merge(crime_df, neighborhoods, on='community_area', how='outer')
 
-    # Remove NA columns where id = NaN.  This is from the discrepancy between the current date and the
+    # Remove NA columns where id = NaN. This is from the discrepancy between the current date and the
     # chosen end date.
     crime_df_2 = crime_df_1.dropna(subset="id")
 
@@ -182,7 +193,7 @@ with st.sidebar:
     begin_date = st.date_input('Begin Date', start_init_1)
     ending_date = st.date_input('End Date', end_init_1)
     st.text("")
-    community_chosen = st.selectbox('Community', options=df_communities['Community'].unique())
+    community_chosen = st.selectbox('Community', options=df_communities['Community'].astype(str).unique())
     crime_type = st.selectbox('Crime Type', options=primary_crime_names['Primary Type'])
     st.text("")
     data_button = st.button("Update Data")
