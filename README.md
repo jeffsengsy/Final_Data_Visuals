@@ -25,3 +25,9 @@ Explore Visualizations:
 View the bar chart, pie chart, and map for insights into crime trends.
 Analyze Data Table:
 Scroll through the table to review detailed crime data.
+
+Datasource
+# API access
+# Website: https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-Present/ijzp-q8t2/data_preview
+# Communities
+# https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Community-Areas-current-/cauq-8yn6
