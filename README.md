@@ -1,6 +1,10 @@
 # Chicago Neighborhood Crime Dashboard
 This Streamlit app provides an interactive and visually engaging dashboard for exploring crime data in Chicago neighborhoods. The dashboard allows users to analyze crime trends, visualize crime distribution by time of day, and view crime locations on a map. It leverages the City of Chicago's open crime dataset and offers insights into various crime types and their occurrences across different communities.
 
+## 🚀 Launch My Streamlit App
+
+[![Open in Streamlit](https://img.shields.io/badge/Streamlit-App-red?logo=streamlit)](https://finaldatavisuals-darcplvsaupj5pvfmnjxp9.streamlit.app/)
+
 https://finaldatavisuals-darcplvsaupj5pvfmnjxp9.streamlit.app/
 
 # Features
